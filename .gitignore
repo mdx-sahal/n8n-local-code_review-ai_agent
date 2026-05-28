@@ -1,0 +1,9 @@
+# Ignore Docker volumes and database files
+n8n_data/
+ollama_data/
+.env
+
+# Ignore any random code files you were testing
+*.pyc
+__pycache__/
+test_scripts/

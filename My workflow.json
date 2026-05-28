@@ -1,0 +1,145 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a7fee256-4340-4d3a-b1ee-c59235ef5fea",
+      "name": "When chat message received",
+      "webhookId": "5dff28a6-ff1c-4798-a72c-782e56a2fc76"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        160,
+        16
+      ],
+      "id": "4597032e-1025-4dd1-be6e-a2ec0a3eb623",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        32,
+        224
+      ],
+      "id": "6885be5a-d339-4015-bc77-6808dcb683dd",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "A3SLsD0evAd897av",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to discover what code files are available in the working directory. This tool returns an array of filenames. Always run this tool first if the user asks you to inspect or review files.",
+        "url": "http://host.docker.internal:8000/list-files",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        304
+      ],
+      "id": "af29c8ce-573a-4af4-a879-dfce79410f08",
+      "name": "list_project_files",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "description": "Use this tool automatically when the user uploads a file. You MUST pass the string 'code' into the file_type parameter. Do NOT output raw JSON to the user.",
+        "jsCode": "// Check if a binary file was actually uploaded in the chat input\nif (!_input.item?.binary) {\n    return { error: \"No file was uploaded. Please attach a file to your chat message.\" };\n}\n\ntry {\n    // Locate the first attached file in the n8n incoming data stream\n    const binaryKeys = Object.keys(_input.item.binary);\n    const primaryFileKey = binaryKeys[0];\n    const fileData = _input.item.binary[primaryFileKey];\n\n    // Read the file's raw base64 data stream and decode it into standard UTF-8 string text\n    const decodedCodeContent = Buffer.from(fileData.data, 'base64').toString('utf-8');\n\n    return {\n        filename: fileData.fileName || \"uploaded_code.py\",\n        content: decodedCodeContent\n    };\n} catch (error) {\n    return { error: `Failed to process uploaded file: ${error.message}` };\n}",
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n  \"file_type\": \"python\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        320
+      ],
+      "id": "eed07764-8bb0-4d64-a853-7d7c5e8618fa",
+      "name": "read_code_file"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "list_project_files": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read_code_file": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "366cff4a-00c2-40e3-9e3b-31e507dcd3f3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9df0928b9e7c8338f28c8e1cc52b8c0c5a6596aa35a37b614b8bdd7634eae5ad"
+  },
+  "id": "xH4IpNPj9F0teBVa",
+  "tags": []
+}
